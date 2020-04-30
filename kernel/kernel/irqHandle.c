@@ -186,7 +186,7 @@ void timerHandle(struct TrapFrame *tf)
 			i = 0;
 		}
 		current = i;
-		//putChar('0' + current);
+		putChar('0' + current);
 		pcb[current].state = STATE_RUNNING;
 		pcb[current].timeCount = 1;
 		tmpStackTop = pcb[current].stackTop;
@@ -342,7 +342,7 @@ void syscallReadStdIn(struct TrapFrame *tf)
 	{
 		if (dev[STD_IN].state == 0)
 		{
-			pcb[current].regs.eax = -1;
+			tf->eax = -1;
 			return;
 		}
 		pcb[current].state = STATE_BLOCKED;
@@ -365,6 +365,8 @@ void syscallReadStdIn(struct TrapFrame *tf)
 	}
 	bufferTail = bufferHead;
 	dev[STD_IN].state = 1;
+	dev[STD_IN].value = 0;
+	tf->eax = i;
 	return;
 }
 

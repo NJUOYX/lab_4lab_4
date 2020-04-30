@@ -4,20 +4,27 @@
 int uEntry(void)
 {
 	char ch;
-	printf("Input: 1 for bounded_buffer\n       2 for philosopher\n       3 for reader_writer\n");
-	scanf("%c", &ch);
 	while (1)
 	{
+		printf("Input: 1 for bounded_buffer\n       2 for philosopher\n       3 for reader_writer\n");
+		scanf("%c", &ch);
+		int res = 0;
 		switch (ch)
 		{
 		case '1':
-			exec("/usr/bounded_buffer", 0);
+			res = fork();
+			if (res != 0)
+				exec("/usr/bounded_buffer", 0);
 			break;
 		case '2':
-			exec("/usr/philosopher", 0);
+			res = fork();
+			if (res != 0)
+				exec("/usr/philosopher", 0);
 			break;
 		case '3':
-			exec("/usr/reader_writer", 0);
+			res = fork();
+			if (res != 0)
+				exec("/usr/reader_writer", 0);
 			break;
 		default:
 			break;
