@@ -297,6 +297,20 @@ void syscallWriteStdOut(struct TrapFrame *tf)
 void syscallWriteShMem(struct TrapFrame *tf)
 {
 	// TODO in lab4
+	int sel = tf->ds; //TODO segment selector for user data, need further modification
+	char *str = (char *)tf->edx;
+	int size = tf->ebx;
+	int i = 0;
+	int begin = tf->esi;
+	char character = 0;
+	asm volatile("movw %0, %%es" ::"m"(sel));
+	for (i = 0; i < size; i++)
+	{
+		asm volatile("movb %%es:(%1), %0"
+					 : "=r"(character)
+					 : "r"(str + i));
+		shMem[begin+i] = character;
+	}
 	return;
 }
 
@@ -357,6 +371,17 @@ void syscallReadStdIn(struct TrapFrame *tf)
 void syscallReadShMem(struct TrapFrame *tf)
 {
 	// TODO in lab4
+	int sel = tf->ds;
+	char *str = (char *)tf->edx;
+	int i = 0;
+	int size = tf->ebx;
+	int begin = tf->esi;
+	while (i < size)
+	{
+		asm volatile("movw %0, %%es" ::"m"(sel));
+		asm volatile("movb %0, %%es:(%1)" ::"r"(shMem[begin+i]), "r"(str + i));
+		i++;
+	}
 	return;
 }
 
