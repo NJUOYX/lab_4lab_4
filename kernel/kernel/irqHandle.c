@@ -186,7 +186,7 @@ void timerHandle(struct TrapFrame *tf)
 			i = 0;
 		}
 		current = i;
-		// putChar('0' + current);
+		//putChar('0' + current);
 		pcb[current].state = STATE_RUNNING;
 		pcb[current].timeCount = 1;
 		tmpStackTop = pcb[current].stackTop;
@@ -213,11 +213,13 @@ void keyboardHandle(struct TrapFrame *tf)
 		dev[STD_IN].value = 0;
 		return;
 	}
-	keyBuffer[bufferTail] = keyCode;
+	keyBuffer[bufferTail] = getChar(keyCode);
 	bufferTail = (bufferTail + 1) % MAX_KEYBUFFER_SIZE;
-	fetch_process_from_sig(dev, STD_IN)
+	fetch_process_from_sig(dev, STD_IN) if (pt->pid != 0)
 		pt->state = STATE_RUNNABLE;
+	//putChar('a' + pt->pid);
 	dev[STD_IN].value = 1;
+	asm volatile("int $0x20");
 	return;
 }
 
@@ -334,22 +336,22 @@ void syscallReadStdIn(struct TrapFrame *tf)
 		add_current_process_to_sig(dev, STD_IN)
 			dev[STD_IN]
 				.state = 0;
-		return;
+		//putChar('p');
+		asm volatile("int $0x20");
 	}
-	else
+	//putChar('x');
+	int sel = tf->ds;
+	char *str = (char *)tf->edx;
+	int i = 0;
+	while (i < tf->ebx && (bufferHead + i) % MAX_KEYBUFFER_SIZE != bufferTail)
 	{
-		int sel = tf->ds;
-		char *str = (char *)tf->edx;
-		int i = 0;
-		while(i<tf->ebx&&(bufferHead+i)%MAX_KEYBUFFER_SIZE!=bufferTail){
-			asm volatile("movw %0, %%es" ::"m"(sel));
-			asm volatile("movb %0, %%es:(%1)" ::"r"(keyBuffer[(bufferHead+i)%MAX_KEYBUFFER_SIZE]), "r"(str + i));
-			i++;
-		}
-		bufferTail = bufferHead;
-		dev[STD_IN].state = 1;
-		return;
+		asm volatile("movw %0, %%es" ::"m"(sel));
+		asm volatile("movb %0, %%es:(%1)" ::"r"(keyBuffer[(bufferHead + i) % MAX_KEYBUFFER_SIZE]), "r"(str + i));
+		i++;
 	}
+	bufferTail = bufferHead;
+	dev[STD_IN].state = 1;
+	return;
 }
 
 void syscallReadShMem(struct TrapFrame *tf)
