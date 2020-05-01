@@ -60,6 +60,7 @@ void syscallExit(struct TrapFrame *tf);
 void syscallSem(struct TrapFrame *tf);
 void syscallGetPid(struct TrapFrame *tf);
 
+void WriteStdOut(char *str, int size);
 void syscallWriteStdOut(struct TrapFrame *tf);
 void syscallReadStdIn(struct TrapFrame *tf);
 void syscallWriteShMem(struct TrapFrame *tf);
@@ -186,7 +187,7 @@ void timerHandle(struct TrapFrame *tf)
 			i = 0;
 		}
 		current = i;
-		putChar('0' + current);
+		//putChar('0' + current);
 		pcb[current].state = STATE_RUNNING;
 		pcb[current].timeCount = 1;
 		tmpStackTop = pcb[current].stackTop;
@@ -208,17 +209,26 @@ void keyboardHandle(struct TrapFrame *tf)
 {
 	// TODO in lab4
 	uint32_t keyCode = getKeyCode();
-	if (keyCode == 0)
+	char c = getChar(keyCode);
+	if (keyCode == 0 || c == 0)
 	{
 		dev[STD_IN].value = 0;
 		return;
 	}
-	keyBuffer[bufferTail] = getChar(keyCode);
+	WriteStdOut(&c,1);
+	char *str_buffer = (char *)keyBuffer;
+	str_buffer[bufferTail] = c;
 	bufferTail = (bufferTail + 1) % MAX_KEYBUFFER_SIZE;
-	fetch_process_from_sig(dev, STD_IN) if (pt->pid != 0)
-		pt->state = STATE_RUNNABLE;
-	//putChar('a' + pt->pid);
-	dev[STD_IN].value = 1;
+	if (c == '\r' || c == '\n')
+	{
+		dev[STD_IN].value = 1;
+		fetch_process_from_sig(dev, STD_IN) if (pt->pid != 0)
+			pt->state = STATE_RUNNABLE;
+	}
+	else
+		dev[STD_IN].value = 0;
+	//putChar(c);
+	//putInt(keyBuffer[bufferTail-1]);
 	asm volatile("int $0x20");
 	return;
 }
@@ -242,6 +252,49 @@ void syscallWrite(struct TrapFrame *tf)
 	default:
 		break;
 	}
+}
+
+void WriteStdOut(char *str, int size)
+{
+	char character = 0;
+	int pos = 0;
+	uint16_t data = 0;
+	int i = 0;
+	for (i = 0; i < size; i++)
+	{
+		character = str[i];
+		if (character == '\n')
+		{
+			displayRow++;
+			displayCol = 0;
+			if (displayRow == 25)
+			{
+				displayRow = 24;
+				displayCol = 0;
+				scrollScreen();
+			}
+		}
+		else
+		{
+			data = character | (0x0c << 8);
+			pos = (80 * displayRow + displayCol) * 2;
+			asm volatile("movw %0, (%1)" ::"r"(data), "r"(pos + 0xb8000));
+			displayCol++;
+			if (displayCol == 80)
+			{
+				displayRow++;
+				displayCol = 0;
+				if (displayRow == 25)
+				{
+					displayRow = 24;
+					displayCol = 0;
+					scrollScreen();
+				}
+			}
+		}
+	}
+
+	updateCursor(displayRow, displayCol);
 }
 
 void syscallWriteStdOut(struct TrapFrame *tf)
@@ -309,7 +362,7 @@ void syscallWriteShMem(struct TrapFrame *tf)
 		asm volatile("movb %%es:(%1), %0"
 					 : "=r"(character)
 					 : "r"(str + i));
-		shMem[begin+i] = character;
+		shMem[begin + i] = character;
 	}
 	return;
 }
@@ -357,15 +410,21 @@ void syscallReadStdIn(struct TrapFrame *tf)
 	int sel = tf->ds;
 	char *str = (char *)tf->edx;
 	int i = 0;
+	//putChar('0'+ bufferTail);
 	while (i < tf->ebx && (bufferHead + i) % MAX_KEYBUFFER_SIZE != bufferTail)
 	{
+		char *str_buffer = (char *)keyBuffer;
+		char character = str_buffer[(bufferHead + i) % MAX_KEYBUFFER_SIZE];
 		asm volatile("movw %0, %%es" ::"m"(sel));
-		asm volatile("movb %0, %%es:(%1)" ::"r"(keyBuffer[(bufferHead + i) % MAX_KEYBUFFER_SIZE]), "r"(str + i));
+		asm volatile("movb %0, %%es:(%1)" ::"r"(character), "r"(str + i));
+
 		i++;
 	}
 	bufferTail = bufferHead;
 	dev[STD_IN].state = 1;
 	dev[STD_IN].value = 0;
+	//putString("show i = ");
+	//putInt(i);
 	tf->eax = i;
 	return;
 }
@@ -381,7 +440,7 @@ void syscallReadShMem(struct TrapFrame *tf)
 	while (i < size)
 	{
 		asm volatile("movw %0, %%es" ::"m"(sel));
-		asm volatile("movb %0, %%es:(%1)" ::"r"(shMem[begin+i]), "r"(str + i));
+		asm volatile("movb %0, %%es:(%1)" ::"r"(shMem[begin + i]), "r"(str + i));
 		i++;
 	}
 	return;
