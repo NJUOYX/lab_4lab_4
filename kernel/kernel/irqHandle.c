@@ -583,24 +583,50 @@ void syscallSem(struct TrapFrame *tf)
 void syscallSemInit(struct TrapFrame *tf)
 {
 	// TODO in lab4
+	int value = tf->edx;
+	for(int i = 0;i<MAX_SEM_NUM;i++){
+		if(sem[i].state == 0){
+			tf->eax = i;
+			sem[i].value = value;
+			return;
+		}
+	}
+	tf->eax = -1;
 	return;
 }
 
 void syscallSemWait(struct TrapFrame *tf)
 {
 	// TODO in lab4
+	int32_t sem_index = tf->edx;
+	sem[sem_index].value--;
+	if(sem[sem_index].value < 0){
+		add_current_process_to_sig(sem,sem_index)
+		pcb[current].state = STATE_BLOCKED;
+		pcb[current].sleepTime = -1;
+		asm volatile("int 0x20");
+	}
 	return;
 }
 
 void syscallSemPost(struct TrapFrame *tf)
 {
 	// TODO in lab4
+	int32_t sem_index = tf->edx;
+	sem[sem_index].value++;
+	if(sem[sem_index].value <= 0){
+		fetch_process_from_sig(sem,sem_index)
+		pt->state = STATE_RUNNABLE;
+		asm volatile("int 0x20");
+	}
 	return;
 }
 
 void syscallSemDestroy(struct TrapFrame *tf)
 {
 	// TODO in lab4
+	int32_t sem_index = tf->edx;
+	sem[sem_index].state = 0;
 	return;
 }
 
