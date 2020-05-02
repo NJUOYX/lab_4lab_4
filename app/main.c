@@ -117,10 +117,11 @@ int uEntry(void)
 			i--;
 			printf("Child Process: Semaphore Waiting.\n");
 			sem_wait(&sem);
-			printf("Child Process: Semaphore Destroying.\n");
-			sem_destroy(&sem);
-			exit();
+			printf("Child Process: In Critical Area.\n");
 		}
+		printf("Child Process: Semaphore Destroying.\n");
+		sem_destroy(&sem);
+		exit();
 	}
 	else if (ret != -1)
 	{
