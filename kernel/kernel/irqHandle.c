@@ -604,7 +604,7 @@ void syscallSemWait(struct TrapFrame *tf)
 	if(sem[sem_index].value < 0){
 		add_current_process_to_sig(sem,sem_index)
 		pcb[current].state = STATE_BLOCKED;
-		pcb[current].sleepTime = -1;
+		pcb[current].sleepTime = 128;
 		asm volatile("int $0x20");
 	}
 	return;

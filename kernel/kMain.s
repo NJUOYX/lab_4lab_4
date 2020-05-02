@@ -3681,7 +3681,7 @@ Disassembly of section .text:
   102cfc:	c1 e0 02             	shl    $0x2,%eax
   102cff:	01 c8                	add    %ecx,%eax
   102d01:	05 5c 40 00 00       	add    $0x405c,%eax
-  102d06:	c7 00 ff ff ff ff    	movl   $0xffffffff,(%eax)
+  102d06:	c7 00 80 00 00 00    	movl   $0x80,(%eax)
   102d0c:	cd 20                	int    $0x20
   102d0e:	90                   	nop
   102d0f:	90                   	nop

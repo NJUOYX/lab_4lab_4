@@ -13,19 +13,23 @@ int main(void)
 	for (int i = 0; i < 4; ++i)
 	{
 		res = fork();
+		int x = 10;
 		if (res == 0)
 		{
-			pid_t id = getpid();
-			sem_wait(&sem_full);
-			sleep(128);
-			sem_wait(&sem_lock);
-			sleep(128);
-			printf("Producer %d: produce\n", id);
-			sleep(128);
-			sem_post(&sem_lock);
-			sleep(128);
-			sem_post(&sem_empty);
-			sleep(128);
+			while (x--)
+			{
+				pid_t id = getpid();
+				sem_wait(&sem_full);
+				sleep(128);
+				sem_wait(&sem_lock);
+				sleep(128);
+				printf("Producer %d: produce\n", id);
+				sleep(128);
+				sem_post(&sem_lock);
+				sleep(128);
+				sem_post(&sem_empty);
+				sleep(128);
+			}
 			exit();
 		}
 		else if (res == -1)
@@ -35,7 +39,7 @@ int main(void)
 			return 0;
 		}
 	}
-	if (res != 0 && res != -1)
+	while (res != 0 && res != -1)
 	{
 		sem_wait(&sem_empty);
 		sleep(128);
