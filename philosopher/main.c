@@ -13,24 +13,34 @@ int main(void)
 	for (int i = 0; i < NUM; ++i)
 	{
 		int res = fork();
+		pid_t id = getpid();
 		while (res == 0)
 		{
-			printf("");
+			printf("philosopher %d is thinking.\n", id - 1);
+			sleep(128);
 			if (i % 2 == 0)
 			{
 				sem_wait(&_fork[i]);
+				sleep(128);
 				sem_wait(&_fork[(i + 1) % NUM]);
+				sleep(128);
 			}
 			else
 			{
 				sem_wait(&_fork[(i + 1) % NUM]);
+				sleep(128);
 				sem_wait(&_fork[i]);
+				sleep(128);
 			}
-			printf("");
+			printf("philosopher %d is eating.\n", id - 1);
+			sleep(128);
 			sem_post(&_fork[i]);
+			sleep(128);
 			sem_post(&_fork[(i + 1) % NUM]);
+			sleep(128);
 		}
-		if(res == -1){
+		if (res == -1)
+		{
 			printf("fork failed.\n");
 			exit();
 		}
