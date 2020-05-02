@@ -1,5 +1,8 @@
 #include "lib.h"
 #include "types.h"
+uint32_t rdm = 0;
+
+#define INTERUPT {rdm = random(256);sleep(rdm);}
 
 int main(void)
 {
@@ -10,6 +13,7 @@ int main(void)
 	sem_init(&sem_empty, 0);
 	sem_init(&sem_lock, 1);
 	int res = 0;
+	uint32_t rdm = 0;
 	for (int i = 0; i < 4; ++i)
 	{
 		res = fork();
@@ -20,15 +24,15 @@ int main(void)
 			{
 				pid_t id = getpid();
 				sem_wait(&sem_full);
-				sleep(128);
+				INTERUPT
 				sem_wait(&sem_lock);
-				sleep(128);
+				INTERUPT
 				printf("Producer %d: produce\n", id);
-				sleep(128);
+				INTERUPT;
 				sem_post(&sem_lock);
-				sleep(128);
+				INTERUPT;
 				sem_post(&sem_empty);
-				sleep(128);
+				INTERUPT;
 			}
 			exit();
 		}
@@ -42,15 +46,15 @@ int main(void)
 	while (res != 0 && res != -1)
 	{
 		sem_wait(&sem_empty);
-		sleep(128);
+		INTERUPT;
 		sem_wait(&sem_lock);
-		sleep(128);
+		INTERUPT;
 		printf("Consumer : consume\n");
-		sleep(128);
+		INTERUPT;
 		sem_post(&sem_lock);
-		sleep(128);
+		INTERUPT;
 		sem_post(&sem_full);
-		sleep(128);
+		INTERUPT;
 	}
 	exit();
 	return 0;

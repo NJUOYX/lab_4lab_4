@@ -631,3 +631,7 @@ int sem_destroy(sem_t *sem) {
 int getpid() {
 	return syscall(SYS_GETPID, 0, 0, 0, 0, 0);
 }
+
+int random(int limit){
+	return ((uint32_t)syscall(SYS_RANDOM,0,0,0,0,0))%limit;
+}

@@ -13,8 +13,11 @@ int main(void) {
 		pid_t id = getpid();
 		while(res == 0){
 			sem_wait(&write_mutex);
+			sleep(128);
 			printf("pid = %d,write\n",id);
+			sleep(128);
 			sem_post(&write_mutex);
+			sleep(128);
 		}
 	}
 	for(int i = 0;i<3;++i){
@@ -22,16 +25,25 @@ int main(void) {
 		pid_t id = getpid();
 		while(res == 0){
 			sem_wait(&count_mutex);
+			sleep(128);
 			if(Rcount == 0)
 				sem_wait(&write_mutex);
+			sleep(128);
 			++Rcount;
+			sleep(128);
 			sem_post(&count_mutex);
+			sleep(128);
 			printf("pid = %d,read.\n",id);
+			sleep(128);
 			sem_wait(&count_mutex);
+			sleep(128);
 			--Rcount;
+			sleep(128);
 			if(Rcount == 0)
 				sem_post(&write_mutex);
+			sleep(128);
 			sem_post(&count_mutex);
+			sleep(128);
 		}
 	}
 	exit();

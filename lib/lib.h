@@ -21,6 +21,8 @@
 #define SEM_POST 2
 #define SEM_DESTROY 3
 
+#define SYS_RANDOM 0xff
+
 #define MAX_BUFFER_SIZE 256
 
 int printf(const char *format,...);
@@ -49,4 +51,5 @@ int sem_destroy(sem_t *sem);
 
 int getpid();
 
+int random(int limit);
 #endif

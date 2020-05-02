@@ -12,7 +12,7 @@ int current; // current process
 
 Semaphore sem[MAX_SEM_NUM];
 Device dev[MAX_DEV_NUM];
-
+uint32_t randomseed = 0;
 /*
 MACRO
 SEG(type, base, lim, dpl) (SegDesc) {...};
@@ -202,6 +202,8 @@ void initProc() {
 	enableInterrupt();
 	asm volatile("int $0x20");
 	while(1) {
+		randomseed*=0x1f9cba2;
+		randomseed+=0x9b8cad;
 		waitForInterrupt();
 	}
 }

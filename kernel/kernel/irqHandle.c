@@ -19,6 +19,8 @@
 #define SEM_POST 2
 #define SEM_DESTROY 3
 
+#define SYS_RANDOM 0xff
+
 extern TSS tss;
 extern ProcessTable pcb[MAX_PCB_NUM];
 extern int current;
@@ -35,6 +37,7 @@ extern int bufferTail;
 
 uint8_t shMem[MAX_SHMEM_SIZE];
 
+extern uint32_t randomseed;
 ProcessTable *pt = NULL;
 
 #define add_current_process_to_sig(sig_type, sig_index)       \
@@ -75,12 +78,17 @@ void syscallSemInit(struct TrapFrame *tf);
 void syscallSemWait(struct TrapFrame *tf);
 void syscallSemPost(struct TrapFrame *tf);
 void syscallSemDestroy(struct TrapFrame *tf);
+
+void syscallGetRandom(struct TrapFrame* tf);
+
 void irqHandle(struct TrapFrame *tf)
 { // pointer tf = esp
 	/*
 	 * 中断处理程序
 	 */
 	/* Reassign segment register */
+	randomseed*=0x2242acb;
+	randomseed+=0xfacaab2;
 	asm volatile("movw %%ax, %%ds" ::"a"(KSEL(SEG_KDATA)));
 
 	uint32_t tmpStackTop = pcb[current].stackTop;
@@ -138,6 +146,9 @@ void syscallHandle(struct TrapFrame *tf)
 	case SYS_GETPID:
 		syscallGetPid(tf);
 		break; // for SYS_GETPID
+	case SYS_RANDOM:
+		syscallGetRandom(tf);
+		break;
 	default:
 		break;
 	}
@@ -640,5 +651,12 @@ void syscallGetPid(struct TrapFrame *tf)
 void GProtectFaultHandle(struct TrapFrame *tf)
 {
 	assert(0);
+	return;
+}
+
+
+void syscallGetRandom(struct TrapFrame* tf)
+{
+	tf->eax = randomseed;
 	return;
 }
