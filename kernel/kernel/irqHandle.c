@@ -588,6 +588,7 @@ void syscallSemInit(struct TrapFrame *tf)
 		if(sem[i].state == 0){
 			tf->eax = i;
 			sem[i].value = value;
+			sem[i].state = 1;
 			return;
 		}
 	}
